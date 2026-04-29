@@ -1,5 +1,4 @@
 import express from "express";
-import cors from "cors";
 import dotenv from "dotenv";
 import path from "path";
 
@@ -11,37 +10,29 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
+
+// IMPORTANT for ES modules
 const __dirname = path.resolve();
 
-// middleware
-if (process.env.NODE_ENV !== "production") {
-  app.use(
-    cors({
-      origin: "http://localhost:5173",
-    })
-  );
-}
-app.use(express.json()); // this middleware will parse JSON bodies: req.body
+// ✅ Middleware
+app.use(express.json());
 app.use(rateLimiter);
 
-// our simple custom middleware
-// app.use((req, res, next) => {
-//   console.log(`Req method is ${req.method} & Req URL is ${req.url}`);
-//   next();
-// });
-
+// ✅ API Routes
 app.use("/api/notes", notesRoutes);
 
+// ✅ Serve frontend (production)
 if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../frontend/dist")));
+  app.use(express.static(path.join(__dirname, "../public")));
 
   app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend", "dist", "index.html"));
+    res.sendFile(path.join(__dirname, "../public", "index.html"));
   });
 }
 
+// ✅ Start server after DB connects
 connectdB().then(() => {
   app.listen(PORT, () => {
-    console.log("Server started on PORT:", PORT);
+    console.log(`Server running on PORT ${PORT}`);
   });
 });
