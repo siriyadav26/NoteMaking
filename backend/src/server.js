@@ -10,27 +10,26 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5001;
-
-// IMPORTANT for ES modules
 const __dirname = path.resolve();
 
-// ✅ Middleware
+// Middleware
 app.use(express.json());
-app.use(rateLimiter);
 
-// ✅ API Routes
+// TEMP: disable rate limiter (it’s causing errors)
+// app.use(rateLimiter);
+
+// API routes FIRST
 app.use("/api/notes", notesRoutes);
 
-// ✅ Serve frontend (production)
-if (process.env.NODE_ENV === "production") {
-  app.use(express.static(path.join(__dirname, "../public")));
+// Serve frontend AFTER API
+app.use(express.static(path.join(__dirname, "../public")));
 
-  app.get("*", (req, res) => {
-    res.sendFile(path.join(__dirname, "../public", "index.html"));
-  });
-}
+// Catch-all route (VERY IMPORTANT — must be LAST)
+app.get("*", (req, res) => {
+  res.sendFile(path.join(__dirname, "../public", "index.html"));
+});
 
-// ✅ Start server after DB connects
+// Start server
 connectdB().then(() => {
   app.listen(PORT, () => {
     console.log(`Server running on PORT ${PORT}`);
